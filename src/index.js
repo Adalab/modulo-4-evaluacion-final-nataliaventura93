@@ -5,12 +5,10 @@
 
 // Imports
 
-const express = require("express");
-const cors = require("cors");
-const mysql = require("mysql2/promise");
-require('dotenv').config()
-
-
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2/promise');
+require('dotenv').config();
 
 // Arracar el servidor
 
@@ -19,29 +17,22 @@ const server = express();
 // Configuración del servidor
 
 server.use(cors());
-server.use(express.json({limit: "25mb"}));
-server.set('view engine', 'ejs');
-
-
+server.use(express.json({ limit: '25mb' }));
 
 // Conexion a la base de datos
 
 async function getConnection() {
-  const connection = await mysql.createConnection(
-    {
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASS,  // <-- Pon aquí tu contraseña o en el fichero /.env en la carpeta raíz
-      database: process.env.DB_NAME || "Clase",
-    }
-  );
+  const connection = await mysql.createConnection({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME || 'Clase',
+  });
 
   connection.connect();
 
   return connection;
 }
-
-
 
 // Poner a escuchar el servidor
 
@@ -50,37 +41,43 @@ server.listen(port, () => {
   console.log(`Ya se ha arrancado nuestro servidor: http://localhost:${port}/`);
 });
 
-
-
 // Endpoints
 
-// GET /api/items
-
-server.get("/api/items", async (req, res) => {
-
-  const selectProducts = "SELECT * FROM products";
-
-  const conn = await getConnection();
-
-  const [results] = await conn.query(selectProducts);
-
-  console.log(results);
-
-  conn.end();
-
-  res.json(results);
+server.get('/api/recetas', async (req, res) => {
+  try {
+    const selectRecipes = 'SELECT * FROM recetas';
+    const conn = await getConnection();
+    const [results] = await conn.query(selectRecipes);
+    conn.end();
+    res.json({
+      success: true,
+      info: { count: results.length },
+      results: results,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'No ha sido posible obtener las recetas',
+    });
+  }
 });
 
+server.get('/api/recetas/:id', async (req, res) => {
+  const recipesId = req.params.id;
 
-
-// GET /details
-
-server.get("/details", async (req, res) => {
-
-  res.render('details', {})
+  try {
+    const selectRecipes = 'SELECT * FROM recetas WHERE id=?';
+    const conn = await getConnection();
+    const [results] = await conn.query(selectRecipes, recipesId);
+    conn.end();
+    res.json({
+      success: true,
+      results: results,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'No ha sido posible obtener las recetas con el id proporcionado',
+    });
+  }
 });
-
-
-// Serv estáticos
-
-server.use(express.static("./src/public_html"));
