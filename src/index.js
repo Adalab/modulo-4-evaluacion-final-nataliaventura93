@@ -70,9 +70,12 @@ server.get('/recetas/:id', async (req, res) => {
     const conn = await getConnection();
     const [results] = await conn.query(selectRecipes, recipesId);
     conn.end();
+    console.log(results)
     res.json({
-      success: true,
-      results: results,
+        "id" : recipesId,
+        "nombre": results[0].nombre,
+        "ingredientes": results[0].ingredientes,
+        "instrucciones": results[0].instrucciones
     });
   } catch (error) {
     res.json({
@@ -97,7 +100,7 @@ server.post('/recetas', async (req, res) => {
     conn.end();
     res.json({
       success: true,
-      id: newRecipe.id
+      id: result.insertId,
     });
   } catch (error) {
     res.json({
@@ -106,3 +109,4 @@ server.post('/recetas', async (req, res) => {
     });
   }
 });
+
