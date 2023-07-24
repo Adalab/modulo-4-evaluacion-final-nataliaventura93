@@ -43,7 +43,7 @@ server.listen(port, () => {
 
 // Endpoints
 
-server.get('/api/recetas', async (req, res) => {
+server.get('/recetas', async (req, res) => {
   try {
     const selectRecipes = 'SELECT * FROM recetas';
     const conn = await getConnection();
@@ -62,7 +62,7 @@ server.get('/api/recetas', async (req, res) => {
   }
 });
 
-server.get('/api/recetas/:id', async (req, res) => {
+server.get('/recetas/:id', async (req, res) => {
   const recipesId = req.params.id;
 
   try {
@@ -78,6 +78,31 @@ server.get('/api/recetas/:id', async (req, res) => {
     res.json({
       success: false,
       message: 'No ha sido posible obtener las recetas con el id proporcionado',
+    });
+  }
+});
+
+server.post('/recetas', async (req, res) => {
+  const newRecipe = req.body;
+
+  try {
+    const insertNewRecipe =
+      'INSERT INTO recetas (nombre, ingredientes, instrucciones) VALUES (?,?,?)';
+    const conn = await getConnection();
+    const [result] = await conn.query(insertNewRecipe, [
+      newRecipe.nombre,
+      newRecipe.ingredientes,
+      newRecipe.instrucciones,
+    ]);
+    conn.end();
+    res.json({
+      success: true,
+      id: newRecipe.id
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'No ha sido posible añadir la receta',
     });
   }
 });
