@@ -1,25 +1,17 @@
-// Servidor Express
-
-// Para probar los ficheros estáticos del fronend, entrar en <http://localhost:4500/>
-// Para probar el API, entrar en <http://localhost:4500/api/items>
-
-// Imports
 
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Arracar el servidor
+
 
 const server = express();
 
-// Configuración del servidor
 
 server.use(cors());
 server.use(express.json({ limit: '25mb' }));
 
-// Conexion a la base de datos
 
 async function getConnection() {
   const connection = await mysql.createConnection({
@@ -34,14 +26,12 @@ async function getConnection() {
   return connection;
 }
 
-// Poner a escuchar el servidor
 
 const port = process.env.PORT || 4500;
 server.listen(port, () => {
   console.log(`Ya se ha arrancado nuestro servidor: http://localhost:${port}/`);
 });
 
-// Endpoints
 
 server.get('/recetas', async (req, res) => {
   try {
@@ -70,7 +60,6 @@ server.get('/recetas/:id', async (req, res) => {
     const conn = await getConnection();
     const [results] = await conn.query(selectRecipes, recipesId);
     conn.end();
-    console.log(results)
     res.json({
         "id" : recipesId,
         "nombre": results[0].nombre,
@@ -110,3 +99,46 @@ server.post('/recetas', async (req, res) => {
   }
 });
 
+server.put('/recetas/:id', async (req, res) => {
+  const recipeId = req.params.id;
+  const {nombre, ingredientes, instrucciones} = req.body;
+
+  try {
+    const updateRecipe = 'UPDATE recetas SET nombre= ?, ingredientes= ?, instrucciones= ? WHERE id = ?';
+    const conn = await getConnection();
+    const [result] = await conn.query(updateRecipe, [
+      nombre,
+      ingredientes,
+      instrucciones,
+      recipeId,
+    ]);
+    conn.end();
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'No ha sido posible actualizar la receta',
+    });
+  }
+});
+
+server.delete('/recetas/:id', async (req, res) => {
+  const recipeId = req.params.id;
+
+  try {
+    const deleteRecipe = 'DELETE from recetas WHERE id= ?';
+    const conn = await getConnection();
+    const [result] = await conn.query(deleteRecipe, recipeId);
+    conn.end();
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: 'No ha sido posible eliminar la receta',
+    });
+  }
+});
